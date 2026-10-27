@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using TaskTracker.Core.Domain;
 
 WorkTask task = new()
@@ -12,11 +12,15 @@ WorkTask task = new()
 
 task.AddEntry(new TimeEntry
 {
-    MemberId = 10, Description = "Збір даних", Hours = 2.5m,
+    MemberId = 10,
+    Description = "Збір даних",
+    Hours = 2.5m,
 });
 task.AddEntry(new TimeEntry
 {
-    MemberId = 11, Description = "Редагування тексту", Hours = 1.25m,
+    MemberId = 11,
+    Description = "Редагування тексту",
+    Hours = 1.25m,
 });
 
 string total = task.CalculateTotalHours()
