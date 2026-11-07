@@ -1,12 +1,12 @@
 ﻿using System.Text;
 using TaskTracker.Core.Domain;
- 
+
 Console.OutputEncoding = Encoding.UTF8;
-var z = new zayavka("T-1001", "Іваненко");
-z.Add("WRK-1", 3, 250m);
-z.Add("WRK-2", 12, 90m);
-Console.WriteLine(z.ProcessData(false));
-Console.WriteLine(z.ProcessData(true));
-Console.WriteLine(z.Ck());
-Console.WriteLine(z.Chg(1));
-Console.Write(z.Rep());
+var request = new WorkRequest("T-1001", "Іваненко");
+request.AddLine("WRK-1", 3, 250m);
+request.AddLine("WRK-2", 12, 90m);
+Console.WriteLine(request.CalculateTotal(false));
+Console.WriteLine(request.CalculateTotal(true));
+Console.WriteLine(request.IsValid());
+Console.WriteLine(request.TryChangeStatus(1));
+Console.Write(request.BuildReport());
