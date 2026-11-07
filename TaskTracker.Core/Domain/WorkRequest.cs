@@ -1,71 +1,123 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace TaskTracker.Core.Domain;
 
-// клас
+/// <summary>
+/// Заявка на виконання робіт: рядки з годинами й погодинною ставкою
+/// та правила розрахунку вартості робіт.
+/// </summary>
 public class WorkRequest
 {
-    // public string prim; // примітка, поки не треба
+    /// <summary>Стан заявки: нова.</summary>
+    public const int StatusNew = 0;
+
+    /// <summary>Стан заявки: погоджена.</summary>
+    public const int StatusApproved = 1;
+
+    /// <summary>Стан заявки: виконана.</summary>
+    public const int StatusDone = 2;
+
+    /// <summary>Стан заявки: скасована.</summary>
+    public const int StatusCancelled = 3;
+
+    /// <summary>Ставка податку на додану вартість.</summary>
+    private const decimal VatRate = 0.2m;
+
+    /// <summary>Поріг суми для знижки постійному замовнику.</summary>
+    private const decimal RegularDiscountThreshold = 1000m;
+
+    /// <summary>Частка знижки постійному замовнику.</summary>
+    private const decimal RegularDiscountRate = 0.10m;
+
+    /// <summary>Поріг суми для знижки на велику заявку.</summary>
+    private const decimal LargeOrderThreshold = 5000m;
+
+    /// <summary>Частка знижки на велику заявку.</summary>
+    private const decimal LargeOrderDiscountRate = 0.15m;
+
+    /// <summary>Кількість рядків, з якої діє гуртова знижка.</summary>
+    private const int BulkLineCount = 10;
+
+    /// <summary>Сума гуртової знижки, грн.</summary>
+    private const decimal BulkDiscountAmount = 100m;
+
+    /// <summary>Максимальна кількість рядків у заявці.</summary>
+    private const int MaxLineCount = 100;
+
+    /// <summary>Мінімальна довжина імені замовника.</summary>
+    private const int MinRequesterNameLength = 3;
+
     private readonly List<string[]> _lines = new List<string[]>();
 
-    // конструктор
+    /// <summary>
+    /// Створює заявку.
+    /// </summary>
+    /// <param name="id">Ідентифікатор заявки.</param>
+    /// <param name="requesterName">Ім’я замовника.</param>
     public WorkRequest(string id, string requesterName)
     {
-        Id = id; // ставимо id
-        RequesterName = requesterName; // ставимо cl
-        CreatedAt = DateTime.Now; // ставимо дату
+        Id = id;
+        RequesterName = requesterName;
+        CreatedAt = DateTime.Now;
     }
 
+    /// <summary>Ідентифікатор заявки.</summary>
     public string Id { get; private set; }
 
+    /// <summary>Ім’я замовника.</summary>
     public string RequesterName { get; private set; }
 
-    public int Status { get; private set; } // 0-нова,1-погодж,2-викон,3-скасов
+    /// <summary>Поточний стан заявки (див. константи Status…).</summary>
+    public int Status { get; private set; }
 
+    /// <summary>Дата й час створення заявки.</summary>
     public DateTime CreatedAt { get; private set; }
 
-    // метод додавання
+    /// <summary>
+    /// Додає до заявки рядок із роботою.
+    /// </summary>
+    /// <param name="workCode">Код виду роботи.</param>
+    /// <param name="hours">Кількість годин.</param>
+    /// <param name="hourlyRate">Погодинна ставка, грн.</param>
     public void AddLine(string workCode, int hours, decimal hourlyRate)
     {
         string[] line = new string[3];
         line[0] = workCode;
         line[1] = hours.ToString();
         line[2] = hourlyRate.ToString();
-        _lines.Add(line); // додаємо t у ln
+        _lines.Add(line);
     }
 
-    // ProcessData
+    /// <summary>
+    /// Обчислює вартість робіт за заявкою з урахуванням знижок і ПДВ.
+    /// </summary>
+    /// <param name="isRegularRequester">Ознака постійного замовника.</param>
+    /// <returns>Сума до сплати, заокруглена до двох знаків.</returns>
     public decimal CalculateTotal(bool isRegularRequester)
     {
         decimal total = 0;
         int lineCount = 0;
+
         for (int i = 0; i < _lines.Count; i++)
         {
             int hours = int.Parse(_lines[i][1]);
             decimal hourlyRate = decimal.Parse(_lines[i][2]);
-            total = total + hours * hourlyRate; // додаємо до суми
-            lineCount = lineCount + 1; // збільшуємо kolvo на одиницю
+            total = total + hours * hourlyRate;
+            lineCount++;
         }
 
-        // if (sum1 > 500) { sum1 = sum1 - 50; } // стара знижка
-        if (isRegularRequester == true && total > 1000)
+        // Порядок нарахування: спочатку знижка за сумою (постійному замовнику
+        // або на велику заявку, діє лише одна), потім гуртова знижка.
+        if (isRegularRequester && total > RegularDiscountThreshold)
         {
-            total = total * 0.9m;
+            total *= 1m - RegularDiscountRate;
         }
-        else if (total > 5000)
+        else if (total > LargeOrderThreshold)
         {
-            total = total * 0.85m;
-        }
-        else
-        {
-            total = total;
+            total *= 1m - LargeOrderDiscountRate;
         }
 
-        if (lineCount > 10)
+        if (lineCount > BulkLineCount)
         {
-            total = total - 100;
+            total -= BulkDiscountAmount;
         }
 
         if (total < 0)
@@ -73,44 +125,52 @@ public class WorkRequest
             total = 0;
         }
 
-        total = total + total * 0.2m;
-        return Math.Round(total, 2); // повертаємо sum1
+        // ПДВ нараховується на суму вже після всіх знижок
+        total += total * VatRate;
+        return Math.Round(total, 2);
     }
 
-    // міняємо статус
+    /// <summary>
+    /// Змінює стан заявки, якщо перехід дозволений правилами предметної області.
+    /// </summary>
+    /// <param name="newStatus">Цільовий стан заявки.</param>
+    /// <returns>true, якщо перехід виконано; false, якщо він заборонений.</returns>
     public bool TryChangeStatus(int newStatus)
     {
-        if (Status == 0 && newStatus == 1)
+        if (Status == StatusNew && newStatus == StatusApproved)
         {
-            Status = 1;
+            Status = StatusApproved;
             return true;
         }
 
-        if (Status == 1 && newStatus == 2)
+        if (Status == StatusApproved && newStatus == StatusDone)
         {
-            Status = 2;
+            Status = StatusDone;
             return true;
         }
 
-        if (Status == 0 && newStatus == 3)
+        if (Status == StatusNew && newStatus == StatusCancelled)
         {
-            Status = 3;
+            Status = StatusCancelled;
             return true;
         }
 
-        return false; // не можна
+        return false;
     }
 
-    // перевірка
+    /// <summary>
+    /// Перевіряє, чи заявка містить усі обов’язкові дані.
+    /// </summary>
+    /// <returns>true, якщо заявку заповнено коректно; інакше false.</returns>
     public bool IsValid()
     {
         if (Id != null && Id != ""
             && RequesterName != null
-            && RequesterName.Length > 2
+            && RequesterName.Length >= MinRequesterNameLength
             && _lines.Count > 0
-            && _lines.Count < 100
-            && Status >= 0
-            && Status <= 3)
+            && _lines.Count < MaxLineCount
+            && Status >= StatusNew
+            && Status <= StatusCancelled)
         {
             return true;
         }
@@ -118,7 +178,10 @@ public class WorkRequest
         return false;
     }
 
-    // звіт
+    /// <summary>
+    /// Формує текстовий звіт за заявкою.
+    /// </summary>
+    /// <returns>Звіт: рядки заявки та підсумкова сума.</returns>
     public string BuildReport()
     {
         string report = "";
@@ -131,10 +194,15 @@ public class WorkRequest
         }
 
         report = report + "Разом: " + CalculateTotal(false) + "\n";
-        return report; // повертаємо s
+        return report;
     }
 
-    // пошук
+    /// <summary>
+    /// Шукає заявку за ідентифікатором.
+    /// </summary>
+    /// <param name="requests">Список заявок.</param>
+    /// <param name="requestId">Ідентифікатор, який шукаємо.</param>
+    /// <returns>Знайдена заявка або null, якщо такої немає.</returns>
     public static WorkRequest FindById(List<WorkRequest> requests, string requestId)
     {
         for (int i = 0; i < requests.Count; i++)
