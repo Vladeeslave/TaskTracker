@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using TaskTracker.Core.Domain;
 
 Console.OutputEncoding = Encoding.UTF8;
