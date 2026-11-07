@@ -36,27 +36,46 @@ dotnet_naming_symbols.priv_field.applicable_accessibilities = private
 dotnet_naming_style.underscore_camel.capitalization = camel_case 
 dotnet_naming_style.underscore_camel.required_prefix = _
 
-# StyleCop: свідомо вимкнені правила 
-# заголовок з ліцензією в навчальному проєкті не потрібен 
-dotnet_diagnostic.SA1633.severity = none 
-# префікс this. суперечить конвенції .NET 
-dotnet_diagnostic.SA1101.severity = none 
-# using поза namespace — стандарт шаблонів .NET 
-dotnet_diagnostic.SA1200.severity = none 
-# приватні поля іменуємо з _, як прийнято в .NET 
-dotnet_diagnostic.SA1309.severity = none 
-# XML-документацію вимагатимемо з ЛР № 4, поки що ні 
-dotnet_diagnostic.SA0001.severity = none 
-dotnet_diagnostic.SA1600.severity = none 
-dotnet_diagnostic.SA1601.severity = none 
-dotnet_diagnostic.SA1602.severity = none 
-# кома в кінці багаторядкового ініціалізатора необов’язкова 
-dotnet_diagnostic.SA1413.severity = none 
-# правила, які лишаємо суворими 
-dotnet_diagnostic.SA1028.severity = warning 
-dotnet_diagnostic.SA1201.severity = warning 
-dotnet_diagnostic.SA1503.severity = warning 
-dotnet_diagnostic.SA1516.severity = warning 
+# StyleCop: свідомо вимкнені правила
+# заголовок з ліцензією в навчальному проєкті не потрібен
+dotnet_diagnostic.SA1633.severity = none
+# префікс this. суперечить конвенції .NET
+dotnet_diagnostic.SA1101.severity = none
+# using поза namespace — стандарт шаблонів .NET
+dotnet_diagnostic.SA1200.severity = none
+# приватні поля іменуємо з _, як прийнято в .NET
+dotnet_diagnostic.SA1309.severity = none
+# аналіз XML-коментарів контролює компілятор (CS1591), SA0001 не потрібне
+dotnet_diagnostic.SA0001.severity = none
+# partial-типи в проєкті не використовуються
+dotnet_diagnostic.SA1601.severity = none
+# кома в кінці багаторядкового ініціалізатора необов’язкова
+dotnet_diagnostic.SA1413.severity = none
+# «Gets» суперечить українській документації
+dotnet_diagnostic.SA1623.severity = none
+# те саме для конструктора («Initializes a new instance of»)
+dotnet_diagnostic.SA1642.severity = none
+# Parse/ToString без культури: виправлення потребує типізованих рядків (ЛР № 3, 6)
+dotnet_diagnostic.CA1305.severity = none
+
+# правила, які лишаємо суворими
+dotnet_diagnostic.SA1028.severity = warning
+dotnet_diagnostic.SA1201.severity = warning
+dotnet_diagnostic.SA1503.severity = warning
+dotnet_diagnostic.SA1516.severity = warning
+dotnet_diagnostic.SA1600.severity = warning
+dotnet_diagnostic.SA1602.severity = warning
+dotnet_diagnostic.SA1611.severity = warning
+dotnet_diagnostic.SA1615.severity = warning
 dotnet_diagnostic.IDE0055.severity = warning
-dotnet_diagnostic.SA1611.severity = none
-dotnet_diagnostic.SA1615.severity = none
+
+# константи (у тому числі приватні) іменуємо PascalCase, а не _camelCase
+dotnet_naming_rule.private_const_pascal.symbols = private_const
+dotnet_naming_rule.private_const_pascal.style = pascal_case_style
+dotnet_naming_rule.private_const_pascal.severity = warning
+
+dotnet_naming_symbols.private_const.applicable_kinds = field
+dotnet_naming_symbols.private_const.applicable_accessibilities = private
+dotnet_naming_symbols.private_const.required_modifiers = const
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case

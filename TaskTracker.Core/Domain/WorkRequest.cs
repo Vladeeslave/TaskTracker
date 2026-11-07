@@ -72,6 +72,25 @@ public class WorkRequest
     public DateTime CreatedAt { get; private set; }
 
     /// <summary>
+    /// Шукає заявку за ідентифікатором.
+    /// </summary>
+    /// <param name="requests">Список заявок.</param>
+    /// <param name="requestId">Ідентифікатор, який шукаємо.</param>
+    /// <returns>Знайдена заявка або null, якщо такої немає.</returns>
+    public static WorkRequest? FindById(List<WorkRequest> requests, string requestId)
+    {
+        for (int i = 0; i < requests.Count; i++)
+        {
+            if (requests[i].Id == requestId)
+            {
+                return requests[i];
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Додає до заявки рядок із роботою.
     /// </summary>
     /// <param name="workCode">Код виду роботи.</param>
@@ -100,7 +119,7 @@ public class WorkRequest
         {
             int hours = int.Parse(_lines[i][1]);
             decimal hourlyRate = decimal.Parse(_lines[i][2]);
-            total = total + hours * hourlyRate;
+            total += hours * hourlyRate;
             lineCount++;
         }
 
@@ -164,7 +183,7 @@ public class WorkRequest
     /// <returns>true, якщо заявку заповнено коректно; інакше false.</returns>
     public bool IsValid()
     {
-        if (Id != null && Id != ""
+        if (Id != null && Id != string.Empty
             && RequesterName != null
             && RequesterName.Length >= MinRequesterNameLength
             && _lines.Count > 0
@@ -184,7 +203,7 @@ public class WorkRequest
     /// <returns>Звіт: рядки заявки та підсумкова сума.</returns>
     public string BuildReport()
     {
-        string report = "";
+        string report = string.Empty;
         for (int i = 0; i < _lines.Count; i++)
         {
             report = report + "Робота: " + _lines[i][0]
@@ -195,24 +214,5 @@ public class WorkRequest
 
         report = report + "Разом: " + CalculateTotal(false) + "\n";
         return report;
-    }
-
-    /// <summary>
-    /// Шукає заявку за ідентифікатором.
-    /// </summary>
-    /// <param name="requests">Список заявок.</param>
-    /// <param name="requestId">Ідентифікатор, який шукаємо.</param>
-    /// <returns>Знайдена заявка або null, якщо такої немає.</returns>
-    public static WorkRequest FindById(List<WorkRequest> requests, string requestId)
-    {
-        for (int i = 0; i < requests.Count; i++)
-        {
-            if (requests[i].Id == requestId)
-            {
-                return requests[i];
-            }
-        }
-
-        return null;
     }
 }
