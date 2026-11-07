@@ -1,32 +1,12 @@
-using System.Globalization;
+﻿using System.Text;
 using TaskTracker.Core.Domain;
-
-WorkTask task = new()
-{
-    Id = 1,
-    ProjectCode = "PRJ-001",
-    Title = "Підготувати звіт за спринт",
-    AssigneeId = 10,
-    CreatedAt = DateTimeOffset.Now,
-};
-
-task.AddEntry(new TimeEntry
-{
-    MemberId = 10,
-    Description = "Збір даних",
-    Hours = 2.5m,
-});
-task.AddEntry(new TimeEntry
-{
-    MemberId = 11,
-    Description = "Редагування тексту",
-    Hours = 1.25m,
-});
-
-string total = task.CalculateTotalHours()
-    .ToString("F2", CultureInfo.InvariantCulture);
-
-Console.WriteLine($"Завдання #{task.Id}");
-Console.WriteLine($"Стан: {task.Status}");
-Console.WriteLine($"Записів часу: {task.Entries.Count}");
-Console.WriteLine($"Годин усього: {total}");
+ 
+Console.OutputEncoding = Encoding.UTF8;
+var z = new zayavka("T-1001", "Іваненко");
+z.Add("WRK-1", 3, 250m);
+z.Add("WRK-2", 12, 90m);
+Console.WriteLine(z.ProcessData(false));
+Console.WriteLine(z.ProcessData(true));
+Console.WriteLine(z.Ck());
+Console.WriteLine(z.Chg(1));
+Console.Write(z.Rep());
