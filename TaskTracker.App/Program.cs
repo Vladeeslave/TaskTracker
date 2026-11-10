@@ -1,11 +1,14 @@
 using System.Text;
 using TaskTracker.Core.Domain;
+using TaskTracker.Core.Reporting;
 using TaskTracker.Core.Requests;
 
 Console.OutputEncoding = Encoding.UTF8;
 TotalRequest request = BuildSampleRequest();
 TotalResult result = RequestTotalCalculator.Calculate(request);
 Console.WriteLine(result.Total);
+string report = RequestReport.TextOf(request, result);
+new RequestReportPrinter(Console.Out).Print(report);
 
 static TotalRequest BuildSampleRequest()
 {
