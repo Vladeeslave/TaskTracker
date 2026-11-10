@@ -12,6 +12,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <InternalsVisibleTo Include="TaskTracker.Tests" />
   </ItemGroup>
 
 </Project>
