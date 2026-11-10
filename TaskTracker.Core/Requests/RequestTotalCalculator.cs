@@ -110,57 +110,21 @@ public static class RequestTotalCalculator
             _ => current,
         };
 
-    /// <summary>Диспетчер: перевіряє заголовок, рахує кроки й за потреби друкує звіт.</summary>
-    /// <param name="requestId">Номер заявки.</param>
-    /// <param name="requesterName">Ім’я замовника.</param>
-    /// <param name="requesterEmail">Пошта замовника.</param>
-    /// <param name="isRegular">Ознака постійного замовника.</param>
-    /// <param name="lines">Рядки заявки.</param>
-    /// <param name="createdAt">Дата створення заявки.</param>
-    /// <param name="couponCode">Код купона або null.</param>
-    /// <param name="status">Поточний стан заявки.</param>
-    /// <param name="printToConsole">Ознака друку звіту в консоль.</param>
-    /// <param name="deliveryPrice">Вартість виїзду, грн.</param>
-    /// <param name="newStatus">Стан заявки після розрахунку.</param>
-    /// <returns>Підсумок заявки, грн.</returns>
-    public static decimal Process(
-        int requestId,
-        string requesterName,
-        string requesterEmail,
-        bool isRegular,
-        IReadOnlyList<WorkLine> lines,
-        DateOnly createdAt,
-        string? couponCode,
-        RequestStatus status,
-        bool printToConsole,
-        decimal deliveryPrice,
-        out RequestStatus newStatus)
+    /// <summary>Рахує підсумок заявки: перевіряє запит і застосовує знижки по черзі.</summary>
+    /// <param name="request">Запит на розрахунок.</param>
+    /// <returns>Підсумок заявки й стан після розрахунку.</returns>
+    public static TotalResult Calculate(TotalRequest request)
     {
-        RequestGuards.EnsureHeaderValid(requestId, requesterName, requesterEmail);
-        decimal total = SubtotalOf(lines);
-        total -= ClientDiscountOf(total, isRegular);
+        RequestGuards.EnsureRequestValid(request);
+        decimal total = SubtotalOf(request.Lines);
+        total -= ClientDiscountOf(total, request.Requester.IsRegular);
         total -= VolumeDiscountOf(total);
-        total -= CouponDiscountOf(total, couponCode);
-        total -= SundayDiscountOf(total, createdAt);
-        total += DeliveryFeeOf(total, deliveryPrice);
-        total = status == RequestStatus.Cancelled
+        total -= CouponDiscountOf(total, request.CouponCode);
+        total -= SundayDiscountOf(total, request.CreatedAt);
+        total += DeliveryFeeOf(total, request.DeliveryPrice);
+        total = request.Status == RequestStatus.Cancelled
             ? 0m
             : Math.Round(Math.Max(total, 0m), 2);
-        newStatus = NextStatusOf(status, total);
-
-        if (printToConsole)
-        {
-            Console.WriteLine("Заявка № " + requestId);
-            Console.WriteLine("Замовник: " + requesterName);
-            foreach (WorkLine line in lines)
-            {
-                Console.WriteLine(line.WorkCode + " x " + line.Hours);
-            }
-
-            Console.WriteLine("Разом: " + total);
-            Console.WriteLine("Стан: " + newStatus);
-        }
-
-        return total;
+        return new TotalResult(total, NextStatusOf(request.Status, total));
     }
 }

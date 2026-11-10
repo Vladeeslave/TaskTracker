@@ -6,54 +6,35 @@ namespace TaskTracker.Tests;
 public class RequestTotalCalculatorTests
 {
     [Fact]
-    public void Process_RegularRequester_Returns1292()
+    public void Calculate_RegularRequester_Returns1292()
     {
-        List<WorkLine> lines = new()
-        {
-            new WorkLine { WorkCode = "WRK-1", Hours = 12, HourlyRate = 100m },
-            new WorkLine { WorkCode = "WRK-2", Hours = 1, HourlyRate = 250m },
-        };
+        TotalRequest request = SampleRequests.RegularRequester();
 
-        decimal total = RequestTotalCalculator.Process(
-            1,
-            "Іваненко",
-            "i@ex.com",
-            true,
-            lines,
-            new DateOnly(2026, 3, 10),
-            null,
-            RequestStatus.New,
-            false,
-            60m,
-            out RequestStatus next);
+        TotalResult result = RequestTotalCalculator.Calculate(request);
 
-        Assert.Equal(1292.70m, total);
-        Assert.Equal(RequestStatus.Approved, next);
+        Assert.Equal(1292.70m, result.Total);
+        Assert.Equal(RequestStatus.Approved, result.Status);
     }
 
     [Fact]
-    public void Process_SmallRequest_AddsDelivery()
+    public void Calculate_SmallRequest_AddsDelivery()
     {
-        List<WorkLine> lines = new()
-        {
-            new WorkLine { WorkCode = "WRK-3", Hours = 2, HourlyRate = 200m },
-        };
+        TotalRequest request = SampleRequests.SmallWithCoupon();
 
-        decimal total = RequestTotalCalculator.Process(
-            2,
-            "Петренко",
-            "p@ex.com",
-            false,
-            lines,
-            new DateOnly(2026, 3, 10),
-            "SALE10",
-            RequestStatus.Approved,
-            false,
-            60m,
-            out RequestStatus next);
+        TotalResult result = RequestTotalCalculator.Calculate(request);
 
-        Assert.Equal(420m, total);
-        Assert.Equal(RequestStatus.Done, next);
+        Assert.Equal(420m, result.Total);
+        Assert.Equal(RequestStatus.Done, result.Status);
+    }
+
+    [Fact]
+    public void Calculate_FreeWork_ReturnsOnlyDelivery()
+    {
+        TotalRequest request = SampleRequests.FreeWork();
+
+        TotalResult result = RequestTotalCalculator.Calculate(request);
+
+        Assert.Equal(60m, result.Total);
     }
 
     [Fact]

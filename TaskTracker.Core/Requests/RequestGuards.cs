@@ -67,4 +67,18 @@ internal static class RequestGuards
                 "Сума не може бути від’ємною.");
         }
     }
+
+    /// <summary>Перевіряє запит на розрахунок: замовника, рядки й плату за виїзд.</summary>
+    /// <param name="request">Запит на розрахунок.</param>
+    public static void EnsureRequestValid(TotalRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.Requester);
+        EnsureHeaderValid(
+            request.RequestId,
+            request.Requester.Name,
+            request.Requester.Email);
+        EnsureLinesValid(request.Lines);
+        ArgumentOutOfRangeException.ThrowIfNegative(request.DeliveryPrice);
+    }
 }
