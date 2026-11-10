@@ -1,5 +1,6 @@
 using TaskTracker.Core.Abstractions;
 using TaskTracker.Core.Domain;
+using TaskTracker.Core.Errors;
 
 namespace TaskTracker.Core.Services;
 
@@ -48,17 +49,24 @@ public sealed class WorkOrderService
         return total;
     }
 
-    /// <summary>АНТИПАТЕРН: ядро саме розбирає рядки з консолі.</summary>
+    /// <summary>Додає рядок до наряду; перевіряє, що наряд існує й редагується.</summary>
     /// <param name="orderId">Номер наряду.</param>
-    /// <param name="workCode">Код роботи.</param>
-    /// <param name="hours">Кількість годин текстом.</param>
-    /// <param name="hourlyRate">Ставка текстом.</param>
-    public void AddLine(int orderId, string workCode, string hours, string hourlyRate)
+    /// <param name="line">Перевірений рядок наряду.</param>
+    public void AddLine(int orderId, WorkOrderLine line)
     {
-        var order = _repository.GetById(orderId);
-        var parsedHours = int.Parse(hours);
-        var rate = decimal.Parse(hourlyRate);
-        order!.AddLine(new WorkOrderLine(workCode, parsedHours, rate));
+        ArgumentNullException.ThrowIfNull(line);
+        WorkOrder order = _repository.GetById(orderId)
+            ?? throw new DomainRuleException(
+                "order.exists",
+                $"Наряд № {orderId} не знайдено.");
+        if (order.Status != WorkOrderStatus.Draft)
+        {
+            throw new DomainRuleException(
+                "order.editable",
+                $"Наряд № {orderId} у стані {order.Status} не редагується.");
+        }
+
+        order.AddLine(line);
     }
 
     /// <summary>АНТИПАТЕРН: коди повернення без назв і сенсу.</summary>
