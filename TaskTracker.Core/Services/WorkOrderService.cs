@@ -46,6 +46,7 @@ public sealed class WorkOrderService
             total += _pricing.PriceOf(line);
         }
 
+        System.Diagnostics.Debug.Assert(total >= 0m, "Сума наряду не може бути від’ємною.");
         return total;
     }
 
@@ -69,30 +70,31 @@ public sealed class WorkOrderService
         order.AddLine(line);
     }
 
-    /// <summary>АНТИПАТЕРН: коди повернення без назв і сенсу.</summary>
+    /// <summary>Приймає оплату: після повної оплати наряд переходить у стан InProgress.</summary>
     /// <param name="orderId">Номер наряду.</param>
     /// <param name="amount">Сплачена сума.</param>
-    /// <returns>0 — успіх, від’ємне число — код помилки.</returns>
-    public int Pay(int orderId, decimal amount)
+    public void Pay(int orderId, decimal amount)
     {
-        var order = _repository.GetById(orderId);
-        if (order == null)
-        {
-            return -1;
-        }
-
+        WorkOrder order = _repository.GetById(orderId)
+            ?? throw new DomainRuleException(
+                "order.exists",
+                $"Наряд № {orderId} не знайдено.");
         if (order.Status != WorkOrderStatus.Planned)
         {
-            return -2;
+            throw new DomainRuleException(
+                "order.payable",
+                $"Стан {order.Status} не дозволяє оплату наряду № {orderId}.");
         }
 
-        if (amount < TotalOf(order))
+        decimal total = TotalOf(order);
+        if (amount < total)
         {
-            return -3;
+            throw new DomainRuleException(
+                "order.amount",
+                $"Сплачено {amount:0.00} грн, а треба {total:0.00} грн.");
         }
 
         order.Start();
-        return 0;
     }
 
     /// <summary>АНТИПАТЕРН: порожній catch і повернення null.</summary>
