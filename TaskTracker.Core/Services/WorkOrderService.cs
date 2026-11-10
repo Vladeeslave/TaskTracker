@@ -1,28 +1,33 @@
+using Microsoft.Extensions.Logging;
 using TaskTracker.Core.Abstractions;
 using TaskTracker.Core.Domain;
 using TaskTracker.Core.Errors;
 
 namespace TaskTracker.Core.Services;
 
-/// <summary>Прикладний сервіс нарядів: приймає наряд, сповіщає й рахує суму.</summary>
+/// <summary>Прикладний сервіс нарядів: приймає наряд, оплачує, скасовує й рахує суму.</summary>
 public sealed class WorkOrderService
 {
     private readonly IWorkOrderRepository _repository;
     private readonly IPricingPolicy _pricing;
     private readonly INotifier _notifier;
+    private readonly ILogger<WorkOrderService> _log;
 
-    /// <summary>Створює сервіс із трьома залежностями.</summary>
+    /// <summary>Створює сервіс із чотирма залежностями.</summary>
     /// <param name="repository">Сховище нарядів.</param>
     /// <param name="pricing">Політика розрахунку ціни.</param>
     /// <param name="notifier">Сповіщувач.</param>
+    /// <param name="log">Журнал подій.</param>
     public WorkOrderService(
         IWorkOrderRepository repository,
         IPricingPolicy pricing,
-        INotifier notifier)
+        INotifier notifier,
+        ILogger<WorkOrderService> log)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _pricing = pricing ?? throw new ArgumentNullException(nameof(pricing));
         _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+        _log = log ?? throw new ArgumentNullException(nameof(log));
     }
 
     /// <summary>Зберігає наряд і сповіщує про його прийняття.</summary>
@@ -30,8 +35,10 @@ public sealed class WorkOrderService
     public void Place(WorkOrder order)
     {
         ArgumentNullException.ThrowIfNull(order);
+        using IDisposable? scope = _log.BeginScope("Order:{OrderId}", order.Id);
         _repository.Add(order);
         _notifier.Notify($"наряд № {order.Id} прийнято.");
+        _log.LogInformation("Наряд {OrderId} прийнято", order.Id);
     }
 
     /// <summary>Рахує суму наряду за підставленою політикою.</summary>
@@ -56,10 +63,9 @@ public sealed class WorkOrderService
     public void AddLine(int orderId, WorkOrderLine line)
     {
         ArgumentNullException.ThrowIfNull(line);
-        WorkOrder order = _repository.GetById(orderId)
-            ?? throw new DomainRuleException(
-                "order.exists",
-                $"Наряд № {orderId} не знайдено.");
+        using IDisposable? scope = _log.BeginScope("Order:{OrderId}", orderId);
+        _log.LogDebug("Додавання рядка {WorkCode} на {Hours} год", line.WorkCode, line.Hours);
+        WorkOrder order = Load(orderId);
         if (order.Status != WorkOrderStatus.Draft)
         {
             throw new DomainRuleException(
@@ -75,10 +81,9 @@ public sealed class WorkOrderService
     /// <param name="amount">Сплачена сума.</param>
     public void Pay(int orderId, decimal amount)
     {
-        WorkOrder order = _repository.GetById(orderId)
-            ?? throw new DomainRuleException(
-                "order.exists",
-                $"Наряд № {orderId} не знайдено.");
+        using IDisposable? scope = _log.BeginScope("Order:{OrderId}", orderId);
+        _log.LogDebug("Початок оплати, сума {Amount}", amount);
+        WorkOrder order = Load(orderId);
         if (order.Status != WorkOrderStatus.Planned)
         {
             throw new DomainRuleException(
@@ -94,7 +99,13 @@ public sealed class WorkOrderService
                 $"Сплачено {amount:0.00} грн, а треба {total:0.00} грн.");
         }
 
+        if (amount > total)
+        {
+            _log.LogWarning("Переплата {Extra} грн", amount - total);
+        }
+
         order.Start();
+        _log.LogInformation("Оплачено {Amount} грн, роботи розпочато", amount);
     }
 
     /// <summary>Завантажує наряд; якщо його немає — кидає виняток, а не повертає null.</summary>
@@ -114,13 +125,16 @@ public sealed class WorkOrderService
     public void Cancel(int orderId, string reason)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        using IDisposable? scope = _log.BeginScope("Order:{OrderId}", orderId);
         WorkOrder order = Load(orderId);
         try
         {
             order.Cancel();
+            _log.LogInformation("Наряд скасовано, причина: {Reason}", reason);
         }
         catch (InvalidOperationException ex)
         {
+            _log.LogError(ex, "Скасування неможливе у стані {Status}", order.Status);
             throw new DomainRuleException(
                 "order.cancellable",
                 $"Наряд № {orderId} у стані {order.Status} скасувати не можна.",

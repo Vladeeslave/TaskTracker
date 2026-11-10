@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.Extensions.Logging;
 using TaskTracker.App.Input;
 using TaskTracker.Core.Abstractions;
 using TaskTracker.Core.Domain;
@@ -11,29 +12,40 @@ using TaskTracker.Core.Storage;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddSimpleConsole(options =>
+    {
+        options.TimestampFormat = "HH:mm:ss ";
+        options.IncludeScopes = true;
+    });
+    builder.SetMinimumLevel(LogLevel.Debug);
+});
+ILogger log = loggerFactory.CreateLogger("TaskTracker.App");
+
 // Верхній обробник: єдине місце, де дозволено catch (Exception)
 try
 {
-    RunApplication();
+    RunApplication(loggerFactory);
     return 0;
 }
 catch (DomainRuleException ex)
 {
-    Console.WriteLine($"Порушено правило {ex.Rule}: {ex.Message}");
+    log.LogWarning("Правило {Rule}: {Message}", ex.Rule, ex.Message);
     return 1;
 }
 catch (IOException ex)
 {
-    Console.WriteLine($"Помилка середовища: {ex.Message}");
+    log.LogError(ex, "Помилка середовища");
     return 3;
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Непередбачений збій: {ex}");
+    log.LogCritical(ex, "Непередбачений збій");
     return 2;
 }
 
-static void RunApplication()
+static void RunApplication(ILoggerFactory loggerFactory)
 {
     var policies = new Dictionary<string, IPricingPolicy>
     {
@@ -50,7 +62,11 @@ static void RunApplication()
 
     var repository = new InMemoryWorkOrderRepository();
     var notifier = new TextWriterNotifier(Console.Out);
-    var service = new WorkOrderService(repository, pricing, notifier);
+    var service = new WorkOrderService(
+        repository,
+        pricing,
+        notifier,
+        loggerFactory.CreateLogger<WorkOrderService>());
 
     var order = new WorkOrder(1, customer.Id, DateOnly.FromDateTime(DateTime.Today));
     service.Place(order);
@@ -59,8 +75,20 @@ static void RunApplication()
 
     decimal total = service.TotalOf(order);
     Console.WriteLine($"Сума: {total:0.00}");
-    service.Pay(order.Id, total);
+
+    // Переплата на 25 грн: для демонстрації рівня Warning
+    service.Pay(order.Id, total + 25m);
     Console.WriteLine($"Стан наряду: {order.Status}");
+
+    try
+    {
+        service.Cancel(order.Id, "демонстрація помилки");
+    }
+    catch (DomainRuleException ex)
+    {
+        Console.WriteLine($"Скасування відхилено: {ex.Message}");
+    }
+
     Console.Write(WorkOrderCsvReport.BuildCsv(repository.GetAll()));
 }
 

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskTracker.Core.Domain;
 using TaskTracker.Core.Errors;
 using TaskTracker.Core.Notifications;
@@ -40,5 +41,6 @@ public class ErrorHandlingTests
         new(
             new InMemoryWorkOrderRepository(),
             new StandardPricingPolicy(),
-            new TextWriterNotifier(TextWriter.Null));
+            new TextWriterNotifier(TextWriter.Null),
+            NullLogger<WorkOrderService>.Instance);
 }

@@ -79,3 +79,6 @@ dotnet_naming_symbols.private_const.applicable_accessibilities = private
 dotnet_naming_symbols.private_const.required_modifiers = const
 
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# вимога LoggerMessage-генератора зайва: методичка вимагає LogInformation з іменованими заповнювачами
+dotnet_diagnostic.CA1848.severity = none
