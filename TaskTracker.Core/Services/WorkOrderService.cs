@@ -97,38 +97,34 @@ public sealed class WorkOrderService
         order.Start();
     }
 
-    /// <summary>АНТИПАТЕРН: порожній catch і повернення null.</summary>
+    /// <summary>Завантажує наряд; якщо його немає — кидає виняток, а не повертає null.</summary>
     /// <param name="orderId">Номер наряду.</param>
-    /// <returns>Наряд або null.</returns>
-    public WorkOrder? Load(int orderId)
+    /// <returns>Знайдений наряд.</returns>
+    public WorkOrder Load(int orderId)
     {
-        try
-        {
-            return _repository.GetById(orderId);
-        }
-        catch (Exception)
-        {
-        }
-
-        return null;
+        return _repository.GetById(orderId)
+            ?? throw new DomainRuleException(
+                "order.exists",
+                $"Наряд № {orderId} не знайдено.");
     }
 
-    /// <summary>АНТИПАТЕРНИ: широкий catch і throw ex.</summary>
+    /// <summary>Скасовує наряд; порушення правила повідомляє винятком із контекстом.</summary>
     /// <param name="orderId">Номер наряду.</param>
     /// <param name="reason">Причина скасування.</param>
     public void Cancel(int orderId, string reason)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        WorkOrder order = Load(orderId);
         try
         {
-            var order = _repository.GetById(orderId);
-            order!.Cancel();
+            order.Cancel();
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            Console.WriteLine("Щось пішло не так");
-#pragma warning disable CA2200 // стан «до» для ЛР 5; виправляється в завданні 5
-            throw ex;
-#pragma warning restore CA2200
+            throw new DomainRuleException(
+                "order.cancellable",
+                $"Наряд № {orderId} у стані {order.Status} скасувати не можна.",
+                ex);
         }
     }
 
