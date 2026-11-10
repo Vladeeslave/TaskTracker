@@ -54,4 +54,17 @@ internal static class RequestGuards
             EnsureLineValid(line);
         }
     }
+
+    /// <summary>Перевіряє проміжну суму: вона не може бути від’ємною.</summary>
+    /// <param name="amount">Проміжна сума, грн.</param>
+    public static void EnsureAmountValid(decimal amount)
+    {
+        if (amount < 0m)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(amount),
+                amount,
+                "Сума не може бути від’ємною.");
+        }
+    }
 }
