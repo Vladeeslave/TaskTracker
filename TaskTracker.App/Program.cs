@@ -47,6 +47,7 @@ catch (Exception ex)
 
 static void RunApplication(ILoggerFactory loggerFactory)
 {
+    using var audit = new FileAuditLog("audit.log");
     var policies = new Dictionary<string, IPricingPolicy>
     {
         ["regular"] = new DiscountPricingPolicy(0.05m),
@@ -78,6 +79,7 @@ static void RunApplication(ILoggerFactory loggerFactory)
 
     // Переплата на 25 грн: для демонстрації рівня Warning
     service.Pay(order.Id, total + 25m);
+    audit.Write("order.paid", order.Id);
     Console.WriteLine($"Стан наряду: {order.Status}");
 
     try
@@ -88,6 +90,10 @@ static void RunApplication(ILoggerFactory loggerFactory)
     {
         Console.WriteLine($"Скасування відхилено: {ex.Message}");
     }
+
+    Directory.CreateDirectory("reports");
+    service.ExportReport(Path.Combine("reports", "order-1.txt"), order);
+    audit.Write("order.exported", order.Id);
 
     Console.Write(WorkOrderCsvReport.BuildCsv(repository.GetAll()));
 }

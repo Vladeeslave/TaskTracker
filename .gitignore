@@ -489,3 +489,7 @@ data/*.local.json
 
 # тека TaskTracker.App не є застосунком macOS, тож правило *.app її не стосується
 !TaskTracker.App/
+
+# файли, які створює застосунок під час роботи
+audit.log
+reports/

@@ -142,14 +142,25 @@ public sealed class WorkOrderService
         }
     }
 
-    /// <summary>АНТИПАТЕРН: файл не закривається, якщо трапиться виняток.</summary>
+    /// <summary>Записує звіт про наряд у файл; потік гарантовано закривається.</summary>
     /// <param name="path">Шлях до файлу звіту.</param>
     /// <param name="order">Наряд на роботи.</param>
     public void ExportReport(string path, WorkOrder order)
     {
-        var writer = new StreamWriter(path);
-        writer.WriteLine($"Наряд {order.Id}");
-        writer.WriteLine(TotalOf(order));
-        writer.Close();
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(order);
+        try
+        {
+            using var writer = new StreamWriter(path);
+            writer.WriteLine($"Наряд {order.Id}");
+            writer.WriteLine(TotalOf(order));
+        }
+        catch (IOException ex)
+        {
+            _log.LogError(ex, "Не вдалося зберегти звіт у {Path}", path);
+            throw;
+        }
+
+        _log.LogInformation("Звіт збережено у {Path}", path);
     }
 }
