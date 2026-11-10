@@ -1,12 +1,29 @@
 using System.Text;
 using TaskTracker.Core.Domain;
+using TaskTracker.Core.Reporting;
+using TaskTracker.Core.Requests;
 
 Console.OutputEncoding = Encoding.UTF8;
-var request = new WorkRequest("T-1001", "Іваненко");
-request.AddLine("WRK-1", 3, 250m);
-request.AddLine("WRK-2", 12, 90m);
-Console.WriteLine(request.CalculateTotal(false));
-Console.WriteLine(request.CalculateTotal(true));
-Console.WriteLine(request.IsValid());
-Console.WriteLine(request.TryChangeStatus(1));
-Console.Write(request.BuildReport());
+TotalRequest request = BuildSampleRequest();
+TotalResult result = RequestTotalCalculator.Calculate(request);
+Console.WriteLine(result.Total);
+string report = RequestReport.TextOf(request, result);
+new RequestReportPrinter(Console.Out).Print(report);
+
+static TotalRequest BuildSampleRequest()
+{
+    List<WorkLine> lines = new()
+    {
+        new WorkLine { WorkCode = "WRK-1", Hours = 12, HourlyRate = 100m },
+        new WorkLine { WorkCode = "WRK-2", Hours = 1, HourlyRate = 250m },
+    };
+
+    return new TotalRequest(
+        RequestId: 1,
+        Requester: new RequesterInfo("Іваненко", "i@ex.com", true),
+        Lines: lines,
+        CreatedAt: new DateOnly(2026, 3, 10),
+        CouponCode: null,
+        Status: RequestStatus.New,
+        DeliveryPrice: 60m);
+}
