@@ -1,6 +1,7 @@
 using System.Text;
 using TaskTracker.Core.Abstractions;
 using TaskTracker.Core.Domain;
+using TaskTracker.Core.Notifications;
 using TaskTracker.Core.Pricing;
 using TaskTracker.Core.Reporting;
 using TaskTracker.Core.Requests;
@@ -16,16 +17,30 @@ new RequestReportPrinter(Console.Out).Print(report);
 
 // ЛР 4. Композиційний корінь: єдине місце, де створюються конкретні реалізації
 Console.WriteLine();
-var repository = new InMemoryWorkOrderRepository();
-IPricingPolicy pricing = new DiscountPricingPolicy(0.05m);
-var service = new WorkOrderService(repository, pricing);
+var policies = new Dictionary<string, IPricingPolicy>
+{
+    ["regular"] = new DiscountPricingPolicy(0.05m),
+    ["vip"] = new VipPricingPolicy(),
+    ["staff"] = new DiscountPricingPolicy(0.30m),
+};
 
 var customer = new Customer(100, "Іваненко Петро", "petro@example.com") { IsRegular = true };
+string customerType = customer.IsRegular ? "regular" : "new";
+IPricingPolicy pricing = policies.TryGetValue(customerType, out IPricingPolicy? found)
+    ? found
+    : new StandardPricingPolicy();
+
+var repository = new InMemoryWorkOrderRepository();
+var notifier = new TextWriterNotifier(Console.Out);
+var service = new WorkOrderService(repository, pricing, notifier);
+
 var order = new WorkOrder(1, customer.Id, DateOnly.FromDateTime(DateTime.Today));
 order.AddLine(new WorkOrderLine("WRK-1", 2, 250m));
+order.Plan();
 service.Place(order);
 
 Console.WriteLine($"Сума: {service.TotalOf(order):0.00}");
+Console.Write(WorkOrderCsvReport.BuildCsv(repository.GetAll()));
 
 static TotalRequest BuildSampleRequest()
 {

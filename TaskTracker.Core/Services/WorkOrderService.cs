@@ -3,27 +3,34 @@ using TaskTracker.Core.Domain;
 
 namespace TaskTracker.Core.Services;
 
-/// <summary>Прикладний сервіс нарядів: приймає наряд і рахує його суму.</summary>
+/// <summary>Прикладний сервіс нарядів: приймає наряд, сповіщає й рахує суму.</summary>
 public sealed class WorkOrderService
 {
     private readonly IWorkOrderRepository _repository;
     private readonly IPricingPolicy _pricing;
+    private readonly INotifier _notifier;
 
-    /// <summary>Створює сервіс із двома залежностями.</summary>
+    /// <summary>Створює сервіс із трьома залежностями.</summary>
     /// <param name="repository">Сховище нарядів.</param>
     /// <param name="pricing">Політика розрахунку ціни.</param>
-    public WorkOrderService(IWorkOrderRepository repository, IPricingPolicy pricing)
+    /// <param name="notifier">Сповіщувач.</param>
+    public WorkOrderService(
+        IWorkOrderRepository repository,
+        IPricingPolicy pricing,
+        INotifier notifier)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _pricing = pricing ?? throw new ArgumentNullException(nameof(pricing));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
-    /// <summary>Зберігає наряд у сховищі.</summary>
+    /// <summary>Зберігає наряд і сповіщує про його прийняття.</summary>
     /// <param name="order">Наряд на роботи.</param>
     public void Place(WorkOrder order)
     {
         ArgumentNullException.ThrowIfNull(order);
         _repository.Add(order);
+        _notifier.Notify($"наряд № {order.Id} прийнято.");
     }
 
     /// <summary>Рахує суму наряду за підставленою політикою.</summary>
