@@ -11,13 +11,13 @@ public class LegacyCharacterizationTests
     }
 
     [Theory]
-    [InlineData(null, "new", "a@b.c", "ERR: null")]
-    [InlineData("empty", "new", "a@b.c", "ERR: empty")]
-    [InlineData("two", "draft", "a@b.c", "ERR: state")]
-    [InlineData("two", "new", "no-mail", "ERR: mail")]
+    [InlineData(null, OrderState.New, "a@b.c", "ERR: null")]
+    [InlineData("empty", OrderState.New, "a@b.c", "ERR: empty")]
+    [InlineData("two", OrderState.Draft, "a@b.c", "ERR: state")]
+    [InlineData("two", OrderState.New, "no-mail", "ERR: mail")]
     public void Handle_BadInput_ReturnsErrorCode(
         string? kindOfLines,
-        string state,
+        OrderState state,
         string mail,
         string expected)
     {
@@ -34,7 +34,7 @@ public class LegacyCharacterizationTests
             7,
             "Іван",
             mail,
-            "regular",
+            ClientKind.Regular,
             0,
             lines,
             state,
@@ -55,10 +55,10 @@ public class LegacyCharacterizationTests
             7,
             "Іван",
             "a@b.c",
-            "vip",
+            ClientKind.Vip,
             3,
             TwoLines(),
-            "new",
+            OrderState.New,
             "UAH",
             new DateTime(2026, 3, 1),
             false);
@@ -75,11 +75,11 @@ public class LegacyCharacterizationTests
     }
 
     [Theory]
-    [InlineData("regular", 0, 760)]
-    [InlineData("vip", 0, 655)]
-    [InlineData("staff", 0, 550)]
-    [InlineData("regular", 11, 725)]
-    public void Preview_ByKind_ReturnsTotal(string kind, int done, decimal expected)
+    [InlineData(ClientKind.Regular, 0, 760)]
+    [InlineData(ClientKind.Vip, 0, 655)]
+    [InlineData(ClientKind.Staff, 0, 550)]
+    [InlineData(ClientKind.Regular, 11, 725)]
+    public void Preview_ByKind_ReturnsTotal(ClientKind kind, int done, decimal expected)
     {
         var sut = new LegacyWorkOrderProcessor();
 
@@ -97,7 +97,7 @@ public class LegacyCharacterizationTests
             new JobLine { JobCode = "WRK-3", Hours = 1, HourlyRate = 1000m },
         };
 
-        decimal total = sut.Preview("regular", 0, lines);
+        decimal total = sut.Preview(ClientKind.Regular, 0, lines);
 
         Assert.Equal(1000m, total);
     }
@@ -111,7 +111,7 @@ public class LegacyCharacterizationTests
             new JobLine { JobCode = "WRK-4", Hours = 1, HourlyRate = 5000m },
         };
 
-        decimal total = sut.Preview("vip", 0, lines);
+        decimal total = sut.Preview(ClientKind.Vip, 0, lines);
 
         Assert.Equal(4500m, total);
     }
@@ -123,7 +123,7 @@ public class LegacyCharacterizationTests
         {
             Name = " іван ",
             Email = "IVAN@MAIL.COM",
-            Kind = "vip",
+            Kind = ClientKind.Vip,
             DoneCount = 12,
             SinceUtc = new DateTime(2020, 1, 1),
         };
@@ -146,10 +146,10 @@ public class LegacyCharacterizationTests
             7,
             "Іван",
             "a@b.c",
-            "regular",
+            ClientKind.Regular,
             0,
             TwoLines(),
-            "new",
+            OrderState.New,
             "UAH",
             new DateTime(2026, 3, 1),
             true);

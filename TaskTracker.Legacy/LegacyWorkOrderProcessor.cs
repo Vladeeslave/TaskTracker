@@ -3,16 +3,6 @@ using System.Collections.Generic;
  
 namespace TaskTracker.Legacy;
  
-public class Client
-{
-    public int Id;
-    public string Name = "";
-    public string Email = "";
-    public string Kind = "regular";
-    public int DoneCount;
-    public DateTime SinceUtc;
-}
- 
 public class JobLine
 {
     public string JobCode = "";
@@ -29,15 +19,15 @@ public class LegacyWorkOrderProcessor
  
     public string Handle(int orderId, int clientId,
         string clientName, string? clientMail,
-        string clientKind, int clientDone,
-        List<JobLine>? lines, string state,
+        ClientKind clientKind, int clientDone,
+        List<JobLine>? lines, OrderState state,
         string currency, DateTime createdAt, bool sendMail)
     {
         if (lines != null)
         {
             if (lines.Count > 0)
             {
-                if (state == "new" || state == "paid")
+                if (state == OrderState.New || state == OrderState.Paid)
                 {
                     if (clientMail != null &&
                         clientMail.Contains("@"))
@@ -71,24 +61,24 @@ public class LegacyWorkOrderProcessor
         }
  
         _tmpDiscount = 0m;
-        if (clientKind == "vip")
+        if (clientKind == ClientKind.Vip)
         {
-            _tmpDiscount = _tmpSum * 0.15m;
-            if (_tmpDiscount > 500m) _tmpDiscount = 500m;
+            _tmpDiscount = _tmpSum * PricingRules.VipRate;
+            if (_tmpDiscount > PricingRules.MaxDiscount) _tmpDiscount = PricingRules.MaxDiscount;
         }
-        else if (clientKind == "staff")
+        else if (clientKind == ClientKind.Staff)
         {
-            _tmpDiscount = _tmpSum * 0.30m;
-            if (_tmpDiscount > 500m) _tmpDiscount = 500m;
+            _tmpDiscount = _tmpSum * PricingRules.StaffRate;
+            if (_tmpDiscount > PricingRules.MaxDiscount) _tmpDiscount = PricingRules.MaxDiscount;
         }
-        else if (clientDone > 10)
+        else if (clientDone > PricingRules.LoyalOrders)
         {
-            _tmpDiscount = _tmpSum * 0.05m;
-            if (_tmpDiscount > 500m) _tmpDiscount = 500m;
+            _tmpDiscount = _tmpSum * PricingRules.LoyalRate;
+            if (_tmpDiscount > PricingRules.MaxDiscount) _tmpDiscount = PricingRules.MaxDiscount;
         }
  
         decimal ship = 0m;
-        if (_tmpSum - _tmpDiscount < 1000m) ship = 60m;
+        if (_tmpSum - _tmpDiscount < PricingRules.FreeShipFrom) ship = PricingRules.ShipCost;
         decimal total = _tmpSum - _tmpDiscount + ship;
  
         string txt = "Документ #" + orderId + "\n";
@@ -113,7 +103,7 @@ public class LegacyWorkOrderProcessor
         return txt;
     }
  
-    public decimal Preview(string clientKind, int clientDone,
+    public decimal Preview(ClientKind clientKind, int clientDone,
         List<JobLine> lines)
     {
         decimal s = 0m;
@@ -122,31 +112,31 @@ public class LegacyWorkOrderProcessor
             s += it.Hours * it.HourlyRate;
         }
         decimal d = 0m;
-        if (clientKind == "vip")
+        if (clientKind == ClientKind.Vip)
         {
-            d = s * 0.15m;
-            if (d > 500m) d = 500m;
+            d = s * PricingRules.VipRate;
+            if (d > PricingRules.MaxDiscount) d = PricingRules.MaxDiscount;
         }
-        else if (clientKind == "staff")
+        else if (clientKind == ClientKind.Staff)
         {
-            d = s * 0.30m;
-            if (d > 500m) d = 500m;
+            d = s * PricingRules.StaffRate;
+            if (d > PricingRules.MaxDiscount) d = PricingRules.MaxDiscount;
         }
-        else if (clientDone > 10)
+        else if (clientDone > PricingRules.LoyalOrders)
         {
-            d = s * 0.05m;
-            if (d > 500m) d = 500m;
+            d = s * PricingRules.LoyalRate;
+            if (d > PricingRules.MaxDiscount) d = PricingRules.MaxDiscount;
         }
         decimal sh = 0m;
-        if (s - d < 1000m) sh = 60m;
+        if (s - d < PricingRules.FreeShipFrom) sh = PricingRules.ShipCost;
         return s - d + sh;
     }
  
     public string DescribeClient(Client c)
     {
         string s = c.Name.Trim().ToUpper();
-        if (c.Kind == "vip") s += " [VIP]";
-        if (c.DoneCount > 10) s += " [ЛОЯЛЬНИЙ]";
+        if (c.Kind == ClientKind.Vip) s += " [VIP]";
+        if (c.IsLoyal) s += " [ЛОЯЛЬНИЙ]";
         s += " <" + c.Email.ToLower() + ">";
         int years = DateTime.Now.Year - c.SinceUtc.Year;
         s += " стаж " + years;
