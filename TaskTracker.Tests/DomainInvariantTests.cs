@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskTracker.Core.Domain;
 using TaskTracker.Core.Notifications;
 using TaskTracker.Core.Pricing;
@@ -32,7 +33,8 @@ public class DomainInvariantTests
         WorkOrderService service = new(
             new InMemoryWorkOrderRepository(),
             new DiscountPricingPolicy(0.10m),
-            new TextWriterNotifier(TextWriter.Null));
+            new TextWriterNotifier(TextWriter.Null),
+            NullLogger<WorkOrderService>.Instance);
         WorkOrder order = NewOrder(2);
         order.AddLine(new WorkOrderLine("WRK-1", 2, 100m));
 

@@ -45,7 +45,7 @@ public class WorkRequest
     /// <summary>Мінімальна довжина імені замовника.</summary>
     private const int MinRequesterNameLength = 3;
 
-    private readonly List<string[]> _lines = new List<string[]>();
+    private readonly List<(string WorkCode, int Hours, decimal HourlyRate)> _lines = new();
 
     /// <summary>
     /// Створює заявку.
@@ -98,11 +98,7 @@ public class WorkRequest
     /// <param name="hourlyRate">Погодинна ставка, грн.</param>
     public void AddLine(string workCode, int hours, decimal hourlyRate)
     {
-        string[] line = new string[3];
-        line[0] = workCode;
-        line[1] = hours.ToString();
-        line[2] = hourlyRate.ToString();
-        _lines.Add(line);
+        _lines.Add((workCode, hours, hourlyRate));
     }
 
     /// <summary>
@@ -117,8 +113,8 @@ public class WorkRequest
 
         for (int i = 0; i < _lines.Count; i++)
         {
-            int hours = int.Parse(_lines[i][1]);
-            decimal hourlyRate = decimal.Parse(_lines[i][2]);
+            int hours = _lines[i].Hours;
+            decimal hourlyRate = _lines[i].HourlyRate;
             total += hours * hourlyRate;
             lineCount++;
         }
@@ -206,10 +202,10 @@ public class WorkRequest
         string report = string.Empty;
         for (int i = 0; i < _lines.Count; i++)
         {
-            report = report + "Робота: " + _lines[i][0]
-                + "; годин: " + _lines[i][1]
-                + "; ставка: " + _lines[i][2]
-                + "; сума: " + (int.Parse(_lines[i][1]) * decimal.Parse(_lines[i][2])) + "\n";
+            report = report + "Робота: " + _lines[i].WorkCode
+                + "; годин: " + _lines[i].Hours
+                + "; ставка: " + _lines[i].HourlyRate
+                + "; сума: " + (_lines[i].Hours * _lines[i].HourlyRate) + "\n";
         }
 
         report = report + "Разом: " + CalculateTotal(false) + "\n";
