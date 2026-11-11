@@ -13,6 +13,9 @@ public class JobLine
  
 public class LegacyWorkOrderProcessor
 {
+    private readonly DiscountPolicy _discounts = new();
+    private readonly ShippingPolicy _shipping = new();
+    private readonly ReportBuilder _report = new();
     private decimal _tmpSum;
     private decimal _tmpDiscount;
     private readonly List<string> _log = new();
@@ -29,24 +32,11 @@ public class LegacyWorkOrderProcessor
         IReadOnlyList<JobLine> lines = req.Lines!;
  
         _tmpSum = Subtotal(lines);
-        _tmpDiscount = DiscountOf(_tmpSum, req.Client);
-        decimal ship = ShippingOf(_tmpSum - _tmpDiscount);
+        _tmpDiscount = _discounts.For(_tmpSum, req.Client);
+        decimal ship = _shipping.For(_tmpSum - _tmpDiscount);
         decimal total = _tmpSum - _tmpDiscount + ship;
  
-        string txt = "Документ #" + req.OrderId + "\n";
-        txt += "Клієнт: " + req.Client.Name + "\n";
-        for (int i = 0; i < lines.Count; i++)
-        {
-            txt += lines[i].JobCode + " x" + lines[i].Hours + " = " +
-                (lines[i].Hours * lines[i].HourlyRate)
-                    .ToString("0.00") + " " + req.Currency + "\n";
-        }
-        txt += "Знижка: " + _tmpDiscount.ToString("0.00") +
-            " " + req.Currency + "\n";
-        txt += "Доставка: " + ship.ToString("0.00") +
-            " " + req.Currency + "\n";
-        txt += "Разом: " + total.ToString("0.00") +
-            " " + req.Currency + "\n";
+        string txt = _report.Build(req, _tmpDiscount, ship, total);
  
         if (req.SendMail)
         {
@@ -90,40 +80,12 @@ public class LegacyWorkOrderProcessor
         return sum;
     }
  
-    private static decimal DiscountOf(decimal subtotal, Client client)
-    {
-        decimal discount = 0m;
-        if (client.Kind == ClientKind.Vip)
-        {
-            discount = subtotal * PricingRules.VipRate;
-            if (discount > PricingRules.MaxDiscount) discount = PricingRules.MaxDiscount;
-        }
-        else if (client.Kind == ClientKind.Staff)
-        {
-            discount = subtotal * PricingRules.StaffRate;
-            if (discount > PricingRules.MaxDiscount) discount = PricingRules.MaxDiscount;
-        }
-        else if (client.IsLoyal)
-        {
-            discount = subtotal * PricingRules.LoyalRate;
-            if (discount > PricingRules.MaxDiscount) discount = PricingRules.MaxDiscount;
-        }
-        return discount;
-    }
- 
-    private static decimal ShippingOf(decimal payable)
-    {
-        decimal ship = 0m;
-        if (payable < PricingRules.FreeShipFrom) ship = PricingRules.ShipCost;
-        return ship;
-    }
- 
     public decimal Preview(Client client, IReadOnlyList<JobLine> lines)
     {
         decimal subtotal = Subtotal(lines);
-        decimal discount = DiscountOf(subtotal, client);
+        decimal discount = _discounts.For(subtotal, client);
         decimal payable = subtotal - discount;
-        return payable + ShippingOf(payable);
+        return payable + _shipping.For(payable);
     }
  
     public string DescribeClient(Client c)
