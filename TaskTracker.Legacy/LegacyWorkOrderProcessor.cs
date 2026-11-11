@@ -23,41 +23,19 @@ public class LegacyWorkOrderProcessor
         List<JobLine>? lines, OrderState state,
         string currency, DateTime createdAt, bool sendMail)
     {
-        if (lines != null)
+        string? error = Validate(lines, state, clientMail);
+        if (error != null)
         {
-            if (lines.Count > 0)
-            {
-                if (state == OrderState.New || state == OrderState.Paid)
-                {
-                    if (clientMail != null &&
-                        clientMail.Contains("@"))
-                    {
-                        _log.Add("ok " + orderId);
-                    }
-                    else
-                    {
-                        return "ERR: mail";
-                    }
-                }
-                else
-                {
-                    return "ERR: state";
-                }
-            }
-            else
-            {
-                return "ERR: empty";
-            }
-        }
-        else
-        {
-            return "ERR: null";
+            return error;
         }
  
+        _log.Add("ok " + orderId);
+        List<JobLine> validLines = lines!;
+ 
         _tmpSum = 0m;
-        for (int i = 0; i < lines.Count; i++)
+        for (int i = 0; i < validLines.Count; i++)
         {
-            _tmpSum += lines[i].Hours * lines[i].HourlyRate;
+            _tmpSum += validLines[i].Hours * validLines[i].HourlyRate;
         }
  
         _tmpDiscount = 0m;
@@ -83,10 +61,10 @@ public class LegacyWorkOrderProcessor
  
         string txt = "Документ #" + orderId + "\n";
         txt += "Клієнт: " + clientName + "\n";
-        for (int i = 0; i < lines.Count; i++)
+        for (int i = 0; i < validLines.Count; i++)
         {
-            txt += lines[i].JobCode + " x" + lines[i].Hours + " = " +
-                (lines[i].Hours * lines[i].HourlyRate)
+            txt += validLines[i].JobCode + " x" + validLines[i].Hours + " = " +
+                (validLines[i].Hours * validLines[i].HourlyRate)
                     .ToString("0.00") + " " + currency + "\n";
         }
         txt += "Знижка: " + _tmpDiscount.ToString("0.00") +
@@ -101,6 +79,31 @@ public class LegacyWorkOrderProcessor
             _log.Add("mail -> " + clientMail);
         }
         return txt;
+    }
+ 
+    private static string? Validate(List<JobLine>? lines, OrderState state, string? mail)
+    {
+        if (lines is null)
+        {
+            return "ERR: null";
+        }
+ 
+        if (lines.Count == 0)
+        {
+            return "ERR: empty";
+        }
+ 
+        if (state is not (OrderState.New or OrderState.Paid))
+        {
+            return "ERR: state";
+        }
+ 
+        if (mail is null || !mail.Contains("@"))
+        {
+            return "ERR: mail";
+        }
+ 
+        return null;
     }
  
     public decimal Preview(ClientKind clientKind, int clientDone,
