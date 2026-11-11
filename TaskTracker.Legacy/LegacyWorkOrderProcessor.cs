@@ -17,66 +17,62 @@ public class LegacyWorkOrderProcessor
     private decimal _tmpDiscount;
     private readonly List<string> _log = new();
  
-    public string Handle(int orderId, int clientId,
-        string clientName, string? clientMail,
-        ClientKind clientKind, int clientDone,
-        List<JobLine>? lines, OrderState state,
-        string currency, DateTime createdAt, bool sendMail)
+    public string Handle(WorkOrderRequest req)
     {
-        string? error = Validate(lines, state, clientMail);
+        string? error = Validate(req);
         if (error != null)
         {
             return error;
         }
  
-        _log.Add("ok " + orderId);
-        List<JobLine> validLines = lines!;
+        _log.Add("ok " + req.OrderId);
+        IReadOnlyList<JobLine> lines = req.Lines!;
  
-        _tmpSum = Subtotal(validLines);
-        _tmpDiscount = DiscountOf(_tmpSum, clientKind, clientDone);
+        _tmpSum = Subtotal(lines);
+        _tmpDiscount = DiscountOf(_tmpSum, req.Client);
         decimal ship = ShippingOf(_tmpSum - _tmpDiscount);
         decimal total = _tmpSum - _tmpDiscount + ship;
  
-        string txt = "Документ #" + orderId + "\n";
-        txt += "Клієнт: " + clientName + "\n";
-        for (int i = 0; i < validLines.Count; i++)
+        string txt = "Документ #" + req.OrderId + "\n";
+        txt += "Клієнт: " + req.Client.Name + "\n";
+        for (int i = 0; i < lines.Count; i++)
         {
-            txt += validLines[i].JobCode + " x" + validLines[i].Hours + " = " +
-                (validLines[i].Hours * validLines[i].HourlyRate)
-                    .ToString("0.00") + " " + currency + "\n";
+            txt += lines[i].JobCode + " x" + lines[i].Hours + " = " +
+                (lines[i].Hours * lines[i].HourlyRate)
+                    .ToString("0.00") + " " + req.Currency + "\n";
         }
         txt += "Знижка: " + _tmpDiscount.ToString("0.00") +
-            " " + currency + "\n";
+            " " + req.Currency + "\n";
         txt += "Доставка: " + ship.ToString("0.00") +
-            " " + currency + "\n";
+            " " + req.Currency + "\n";
         txt += "Разом: " + total.ToString("0.00") +
-            " " + currency + "\n";
+            " " + req.Currency + "\n";
  
-        if (sendMail)
+        if (req.SendMail)
         {
-            _log.Add("mail -> " + clientMail);
+            _log.Add("mail -> " + req.Client.Email);
         }
         return txt;
     }
  
-    private static string? Validate(List<JobLine>? lines, OrderState state, string? mail)
+    private static string? Validate(WorkOrderRequest req)
     {
-        if (lines is null)
+        if (req.Lines is null)
         {
             return "ERR: null";
         }
  
-        if (lines.Count == 0)
+        if (req.Lines.Count == 0)
         {
             return "ERR: empty";
         }
  
-        if (state is not (OrderState.New or OrderState.Paid))
+        if (req.State is not (OrderState.New or OrderState.Paid))
         {
             return "ERR: state";
         }
  
-        if (mail is null || !mail.Contains("@"))
+        if (!req.Client.HasValidEmail)
         {
             return "ERR: mail";
         }
@@ -84,7 +80,7 @@ public class LegacyWorkOrderProcessor
         return null;
     }
  
-    private static decimal Subtotal(List<JobLine> lines)
+    private static decimal Subtotal(IReadOnlyList<JobLine> lines)
     {
         decimal sum = 0m;
         foreach (var line in lines)
@@ -94,20 +90,20 @@ public class LegacyWorkOrderProcessor
         return sum;
     }
  
-    private static decimal DiscountOf(decimal subtotal, ClientKind kind, int done)
+    private static decimal DiscountOf(decimal subtotal, Client client)
     {
         decimal discount = 0m;
-        if (kind == ClientKind.Vip)
+        if (client.Kind == ClientKind.Vip)
         {
             discount = subtotal * PricingRules.VipRate;
             if (discount > PricingRules.MaxDiscount) discount = PricingRules.MaxDiscount;
         }
-        else if (kind == ClientKind.Staff)
+        else if (client.Kind == ClientKind.Staff)
         {
             discount = subtotal * PricingRules.StaffRate;
             if (discount > PricingRules.MaxDiscount) discount = PricingRules.MaxDiscount;
         }
-        else if (done > PricingRules.LoyalOrders)
+        else if (client.IsLoyal)
         {
             discount = subtotal * PricingRules.LoyalRate;
             if (discount > PricingRules.MaxDiscount) discount = PricingRules.MaxDiscount;
@@ -122,11 +118,10 @@ public class LegacyWorkOrderProcessor
         return ship;
     }
  
-        public decimal Preview(ClientKind clientKind, int clientDone,
-        List<JobLine> lines)
+    public decimal Preview(Client client, IReadOnlyList<JobLine> lines)
     {
         decimal subtotal = Subtotal(lines);
-        decimal discount = DiscountOf(subtotal, clientKind, clientDone);
+        decimal discount = DiscountOf(subtotal, client);
         decimal payable = subtotal - discount;
         return payable + ShippingOf(payable);
     }

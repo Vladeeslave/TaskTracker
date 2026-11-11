@@ -30,17 +30,7 @@ public class LegacyCharacterizationTests
         var sut = new LegacyWorkOrderProcessor();
 
         string actual = sut.Handle(
-            1001,
-            7,
-            "Іван",
-            mail,
-            ClientKind.Regular,
-            0,
-            lines,
-            state,
-            "UAH",
-            new DateTime(2026, 3, 1),
-            false);
+            Request(NewClient(ClientKind.Regular, 0, mail), lines, state));
 
         Assert.Equal(expected, actual);
     }
@@ -51,17 +41,7 @@ public class LegacyCharacterizationTests
         var sut = new LegacyWorkOrderProcessor();
 
         string report = sut.Handle(
-            1001,
-            7,
-            "Іван",
-            "a@b.c",
-            ClientKind.Vip,
-            3,
-            TwoLines(),
-            OrderState.New,
-            "UAH",
-            new DateTime(2026, 3, 1),
-            false);
+            Request(NewClient(ClientKind.Vip, 3, "a@b.c"), TwoLines(), OrderState.New));
 
         string expected =
             "Документ #1001\n" +
@@ -83,7 +63,7 @@ public class LegacyCharacterizationTests
     {
         var sut = new LegacyWorkOrderProcessor();
 
-        decimal total = sut.Preview(kind, done, TwoLines());
+        decimal total = sut.Preview(NewClient(kind, done, "a@b.c"), TwoLines());
 
         Assert.Equal(expected, total);
     }
@@ -97,7 +77,7 @@ public class LegacyCharacterizationTests
             new JobLine { JobCode = "WRK-3", Hours = 1, HourlyRate = 1000m },
         };
 
-        decimal total = sut.Preview(ClientKind.Regular, 0, lines);
+        decimal total = sut.Preview(NewClient(ClientKind.Regular, 0, "a@b.c"), lines);
 
         Assert.Equal(1000m, total);
     }
@@ -111,7 +91,7 @@ public class LegacyCharacterizationTests
             new JobLine { JobCode = "WRK-4", Hours = 1, HourlyRate = 5000m },
         };
 
-        decimal total = sut.Preview(ClientKind.Vip, 0, lines);
+        decimal total = sut.Preview(NewClient(ClientKind.Vip, 0, "a@b.c"), lines);
 
         Assert.Equal(4500m, total);
     }
@@ -142,17 +122,11 @@ public class LegacyCharacterizationTests
     {
         var sut = new LegacyWorkOrderProcessor();
         sut.Handle(
-            1001,
-            7,
-            "Іван",
-            "a@b.c",
-            ClientKind.Regular,
-            0,
-            TwoLines(),
-            OrderState.New,
-            "UAH",
-            new DateTime(2026, 3, 1),
-            true);
+            Request(
+                NewClient(ClientKind.Regular, 0, "a@b.c"),
+                TwoLines(),
+                OrderState.New,
+                sendMail: true));
 
         Assert.Equal("ok 1001\nmail -> a@b.c\n", sut.DumpLog());
     }
@@ -162,4 +136,20 @@ public class LegacyCharacterizationTests
         new JobLine { JobCode = "WRK-1", Hours = 2, HourlyRate = 150m },
         new JobLine { JobCode = "WRK-2", Hours = 1, HourlyRate = 400m },
     };
+
+    private static Client NewClient(ClientKind kind, int done, string mail) => new()
+    {
+        Id = 7,
+        Name = "Іван",
+        Email = mail,
+        Kind = kind,
+        DoneCount = done,
+    };
+
+    private static WorkOrderRequest Request(
+        Client client,
+        IReadOnlyList<JobLine>? lines,
+        OrderState state,
+        bool sendMail = false) =>
+        new(1001, client, lines, state, "UAH", sendMail);
 }
