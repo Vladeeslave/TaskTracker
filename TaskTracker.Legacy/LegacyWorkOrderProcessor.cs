@@ -16,8 +16,6 @@ public class LegacyWorkOrderProcessor
     private readonly DiscountPolicy _discounts = new();
     private readonly ShippingPolicy _shipping = new();
     private readonly ReportBuilder _report = new();
-    private decimal _tmpSum;
-    private decimal _tmpDiscount;
     private readonly List<string> _log = new();
  
     public string Handle(WorkOrderRequest req)
@@ -31,12 +29,13 @@ public class LegacyWorkOrderProcessor
         _log.Add("ok " + req.OrderId);
         IReadOnlyList<JobLine> lines = req.Lines!;
  
-        _tmpSum = Subtotal(lines);
-        _tmpDiscount = _discounts.For(_tmpSum, req.Client);
-        decimal ship = _shipping.For(_tmpSum - _tmpDiscount);
-        decimal total = _tmpSum - _tmpDiscount + ship;
+        decimal subtotal = Subtotal(lines);
+        decimal discount = _discounts.For(subtotal, req.Client);
+        decimal shipping = _shipping.For(subtotal - discount);
+        decimal total = subtotal - discount + shipping;
  
-        string txt = _report.Build(req, _tmpDiscount, ship, total);
+        string txt = _report.Build(req, discount, shipping, total);
+
  
         if (req.SendMail)
         {
