@@ -48,4 +48,17 @@ public class WorkCostPolicyTests
         // Assert
         Assert.Equal("hours", ex.ParamName);
     }
+
+    [Fact]
+    public void HourCostFor_UrgentOverMaxHours_SurchargeNotApplied()
+    {
+        // Arrange
+        int hours = 25;
+
+        // Act
+        decimal actual = WorkCostPolicy.HourCostFor(1000m, hours, true);
+
+        // Assert
+        Assert.Equal(900m, actual);
+    }
 }
