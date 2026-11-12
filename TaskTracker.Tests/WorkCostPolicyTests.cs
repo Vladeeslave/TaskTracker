@@ -4,107 +4,48 @@ namespace TaskTracker.Tests;
 
 public class WorkCostPolicyTests
 {
-    [Fact]
-    public void HourCostFor_NegativeRate_ThrowsOutOfRange()
+    [Theory]
+    [InlineData(0.01, 1, false, 0.01)]
+    [InlineData(1000, 1, false, 1000)]
+    [InlineData(1000, 1, true, 1200)]
+    [InlineData(1000, 7, false, 1000)]
+    [InlineData(1000, 8, false, 900)]
+    [InlineData(1000, 8, true, 1100)]
+    [InlineData(333.33, 8, true, 366.66)]
+    public void HourCostFor_Boundaries_MatchesTable(
+        double hourlyRate, int hours, bool isUrgent, double expected)
+    {
+        // Act
+        decimal actual = WorkCostPolicy.HourCostFor((decimal)hourlyRate, hours, isUrgent);
+
+        // Assert
+        Assert.Equal((decimal)expected, actual);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-0.01)]
+    [InlineData(-1000)]
+    public void HourCostFor_InvalidRate_ThrowsOutOfRange(double hourlyRate)
     {
         // Act
         ArgumentOutOfRangeException ex = Assert.Throws<ArgumentOutOfRangeException>(
-            () => WorkCostPolicy.HourCostFor(-0.01m, 3, false));
+            () => WorkCostPolicy.HourCostFor((decimal)hourlyRate, 3, false));
 
         // Assert
         Assert.Equal("hourlyRate", ex.ParamName);
     }
 
-    [Fact]
-    public void HourCostFor_ZeroHours_ThrowsOutOfRange()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void HourCostFor_InvalidHours_ThrowsOutOfRange(int hours)
     {
         // Act
         ArgumentOutOfRangeException ex = Assert.Throws<ArgumentOutOfRangeException>(
-            () => WorkCostPolicy.HourCostFor(1000m, 0, false));
+            () => WorkCostPolicy.HourCostFor(1000m, hours, false));
 
         // Assert
         Assert.Equal("hours", ex.ParamName);
-    }
-
-    [Fact]
-    public void HourCostFor_MinimalRate_ReturnsOneKopeck()
-    {
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(0.01m, 1, false);
-
-        // Assert
-        Assert.Equal(0.01m, actual);
-    }
-
-    [Fact]
-    public void HourCostFor_OneHourRegular_ReturnsRate()
-    {
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(1000m, 1, false);
-
-        // Assert
-        Assert.Equal(1000m, actual);
-    }
-
-    [Fact]
-    public void HourCostFor_OneHourUrgent_AddsSurcharge()
-    {
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(1000m, 1, true);
-
-        // Assert
-        Assert.Equal(1200m, actual);
-    }
-
-    [Fact]
-    public void HourCostFor_SevenHours_NoDiscount()
-    {
-        // Arrange
-        int hours = WorkCostPolicy.BulkFrom - 1;
-
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(1000m, hours, false);
-
-        // Assert
-        Assert.Equal(1000m, actual);
-    }
-
-    [Fact]
-    public void HourCostFor_EightHours_AppliesDiscount()
-    {
-        // Arrange
-        int hours = WorkCostPolicy.BulkFrom;
-
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(1000m, hours, false);
-
-        // Assert
-        Assert.Equal(900m, actual);
-    }
-
-    [Fact]
-    public void HourCostFor_EightHoursUrgent_CombinesBothRules()
-    {
-        // Arrange
-        int hours = WorkCostPolicy.BulkFrom;
-
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(1000m, hours, true);
-
-        // Assert
-        Assert.Equal(1100m, actual);
-    }
-
-    [Fact]
-    public void HourCostFor_NonRoundProduct_RoundsToKopecks()
-    {
-        // Arrange
-        int hours = WorkCostPolicy.BulkFrom;
-
-        // Act
-        decimal actual = WorkCostPolicy.HourCostFor(333.33m, hours, true);
-
-        // Assert
-        Assert.Equal(366.66m, actual);
     }
 }
