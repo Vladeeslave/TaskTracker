@@ -22,6 +22,12 @@ public static class WorkCostPolicy
     /// <returns>Вартість години, грн, округлена до копійок.</returns>
     public static decimal HourCostFor(decimal hourlyRate, int hours, bool isUrgent)
     {
+        EnsureArgumentsAreValid(hourlyRate, hours);
+        return decimal.Round(hourlyRate * FactorFor(hours, isUrgent), 2);
+    }
+
+    private static void EnsureArgumentsAreValid(decimal hourlyRate, int hours)
+    {
         if (hourlyRate <= 0m)
         {
             throw new ArgumentOutOfRangeException(
@@ -37,7 +43,10 @@ public static class WorkCostPolicy
                 hours,
                 "Обсяг роботи має бути не менше однієї години.");
         }
+    }
 
+    private static decimal FactorFor(int hours, bool isUrgent)
+    {
         decimal factor = 1m;
         if (isUrgent && hours <= UrgentMaxHours)
         {
@@ -49,6 +58,6 @@ public static class WorkCostPolicy
             factor -= BulkRate;
         }
 
-        return decimal.Round(hourlyRate * factor, 2);
+        return factor;
     }
 }

@@ -12,6 +12,8 @@ public class WorkCostPolicyTests
     [InlineData(1000, 8, false, 900)]
     [InlineData(1000, 8, true, 1100)]
     [InlineData(333.33, 8, true, 366.66)]
+    [InlineData(1000, 24, true, 1100)]
+    [InlineData(1000, 25, true, 900)]
     public void HourCostFor_Boundaries_MatchesTable(
         double hourlyRate, int hours, bool isUrgent, double expected)
     {
