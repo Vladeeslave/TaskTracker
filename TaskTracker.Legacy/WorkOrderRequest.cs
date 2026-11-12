@@ -1,5 +1,5 @@
 namespace TaskTracker.Legacy;
- 
+
 public sealed record WorkOrderRequest(
     int OrderId,
     Client Client,

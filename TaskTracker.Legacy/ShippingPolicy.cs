@@ -1,5 +1,5 @@
 namespace TaskTracker.Legacy;
- 
+
 public sealed class ShippingPolicy
 {
     public decimal For(decimal payable) =>
