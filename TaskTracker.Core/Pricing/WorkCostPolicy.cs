@@ -12,6 +12,9 @@ public static class WorkCostPolicy
     /// <summary>Кількість годин, з якої діє знижка за обсяг.</summary>
     public const int BulkFrom = 8;
 
+    /// <summary>Найбільший обсяг у годинах, до якого діє надбавка за терміновість.</summary>
+    public const int UrgentMaxHours = 24;
+
     /// <summary>Рахує вартість однієї години роботи з урахуванням надбавки й знижки.</summary>
     /// <param name="hourlyRate">Погодинна ставка, грн; має бути більшою за нуль.</param>
     /// <param name="hours">Обсяг роботи в годинах; не менше однієї.</param>
@@ -36,7 +39,7 @@ public static class WorkCostPolicy
         }
 
         decimal factor = 1m;
-        if (isUrgent)
+        if (isUrgent && hours <= UrgentMaxHours)
         {
             factor += UrgentRate;
         }
