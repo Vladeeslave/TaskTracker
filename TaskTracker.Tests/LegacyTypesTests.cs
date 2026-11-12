@@ -241,7 +241,7 @@ public class Lab1TypesTests
     }
 }
 
-public class RequestReportTests
+public class RequestReportSampleTests
 {
     [Fact]
     public void TextOf_SampleRequest_ContainsTotalAndStatus()
