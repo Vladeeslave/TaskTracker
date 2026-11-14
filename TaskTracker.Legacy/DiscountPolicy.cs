@@ -1,5 +1,5 @@
 namespace TaskTracker.Legacy;
- 
+
 public sealed class DiscountPolicy
 {
     // Порядок важливий: перше правило, що підходить, визначає ставку
@@ -9,13 +9,13 @@ public sealed class DiscountPolicy
         new StaffDiscountRule(),
         new LoyalDiscountRule(),
     };
- 
+
     public decimal For(decimal subtotal, Client client)
     {
         decimal rate = RateFor(client);
         return Math.Min(subtotal * rate, PricingRules.MaxDiscount);
     }
- 
+
     private decimal RateFor(Client client)
     {
         foreach (IDiscountRule rule in _rules)
@@ -26,7 +26,7 @@ public sealed class DiscountPolicy
                 return rate.Value;
             }
         }
- 
+
         return 0m;
     }
 }

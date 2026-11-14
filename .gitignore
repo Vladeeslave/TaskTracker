@@ -493,3 +493,9 @@ data/*.local.json
 # файли, які створює застосунок під час роботи
 audit.log
 reports/
+
+# ЛР 7: результати збірки, тестів і покриття
+bin/
+obj/
+TestResults/
+coverage/

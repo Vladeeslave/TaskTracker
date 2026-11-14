@@ -1,5 +1,5 @@
 namespace TaskTracker.Legacy;
- 
+
 public static class PricingRules
 {
     public const decimal VipRate = 0.15m;
