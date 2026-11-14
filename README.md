@@ -44,3 +44,28 @@ dotnet run --project TaskTracker.App
 ## Автор
 
 Прізвище Ім'я, група
+
+## Конвеєр CI
+
+Кожен push у main і feature/** та кожен pull request у main запускає GitHub Actions
+(файл .github/workflows/ci.yml) на чистій машині ubuntu з .NET 8.
+
+| Крок | Команда | Поріг |
+|------|---------|-------|
+| Формат | dotnet format --verify-no-changes | без змін |
+| Складання | dotnet build -c Release | 0 попереджень, 0 помилок |
+| Тести | dotnet test -c Release | 100 % зелених |
+| Покриття | /p:Threshold=60 | не менше 60 % рядків TaskTracker.Core |
+
+Зламана збірка — найвищий пріоритет: поки main червона, нові задачі не починаються.
+
+## Версія
+
+Поточна версія 0.8.0 задана властивістю VersionPrefix у Directory.Build.props
+і друкується застосунком першим рядком.
+
+## Перевірка локально
+
+    dotnet format --verify-no-changes
+    dotnet build -c Release
+    dotnet test
