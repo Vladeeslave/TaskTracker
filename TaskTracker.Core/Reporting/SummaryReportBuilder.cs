@@ -33,4 +33,5 @@ public sealed class SummaryReportBuilder
         string note;
         return "Позицій: " + count;
     }
+
 }
