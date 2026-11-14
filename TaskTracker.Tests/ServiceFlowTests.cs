@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using TaskTracker.Core.Abstractions;
@@ -204,7 +205,7 @@ public class WorkOrderServiceFlowTests
 
             // Assert
             Assert.Equal("Наряд 7", lines[0]);
-            Assert.Equal(service.TotalOf(order).ToString(), lines[1]);
+            Assert.Equal(service.TotalOf(order).ToString(CultureInfo.CurrentCulture), lines[1]);
         }
         finally
         {

@@ -55,8 +55,9 @@ dotnet_diagnostic.SA1413.severity = none
 dotnet_diagnostic.SA1623.severity = none
 # те саме для конструктора («Initializes a new instance of»)
 dotnet_diagnostic.SA1642.severity = none
-# Parse/ToString без культури: виправлення потребує типізованих рядків (ЛР № 3, 6)
-dotnet_diagnostic.CA1305.severity = none
+# Parse/ToString без культури: борг закрито в ЛР № 8 (типізовані рядки з ЛР № 5)
+dotnet_diagnostic.CA1305.severity = warning
+
 
 # правила, які лишаємо суворими
 dotnet_diagnostic.SA1028.severity = warning
