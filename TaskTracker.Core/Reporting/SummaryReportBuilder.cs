@@ -24,14 +24,4 @@ public sealed class SummaryReportBuilder
 
         return text.ToString();
     }
-
-    /// <summary>Навмисно некоректний метод для перевірки конвеєра.</summary>
-    /// <param name="count">Кількість позицій.</param>
-    /// <returns>Текст із кількістю позицій.</returns>
-    public string Describe(int count)
-    {
-        string note;
-        return "Позицій: " + count;
-    }
-
 }
