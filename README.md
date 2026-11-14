@@ -1,5 +1,7 @@
 # TaskTracker
 
+![CI](https://github.com/Vladeeslave/TaskTracker/actions/workflows/ci.yml/badge.svg)
+
 Навчальний проєкт з дисципліни «Конструювання програмного забезпечення».
 Варіант № N: облік робочих завдань команди.
 
