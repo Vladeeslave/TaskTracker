@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TaskTracker.App.Input;
+using TaskTracker.Core;
 using TaskTracker.Core.Abstractions;
 using TaskTracker.Core.Domain;
 using TaskTracker.Core.Errors;
@@ -10,6 +11,7 @@ using TaskTracker.Core.Reporting;
 using TaskTracker.Core.Services;
 using TaskTracker.Core.Storage;
 
+Console.WriteLine($"TaskTracker v{VersionInfo.Current()}");
 Console.OutputEncoding = Encoding.UTF8;
 
 using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>

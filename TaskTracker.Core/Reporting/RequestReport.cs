@@ -18,15 +18,15 @@ public static class RequestReport
         ArgumentNullException.ThrowIfNull(result);
         CultureInfo culture = CultureInfo.InvariantCulture;
         StringBuilder text = new();
-        text.AppendLine($"Заявка № {request.RequestId}");
-        text.AppendLine($"Замовник: {request.Requester.Name}");
+        text.AppendLine(culture, $"Заявка № {request.RequestId}");
+        text.AppendLine(culture, $"Замовник: {request.Requester.Name}");
         foreach (WorkLine line in request.Lines)
         {
-            text.AppendLine($"{line.WorkCode} x {line.Hours}");
+            text.AppendLine(culture, $"{line.WorkCode} x {line.Hours}");
         }
 
         text.AppendLine(string.Format(culture, "Разом: {0:F2}", result.Total));
-        text.AppendLine($"Стан: {result.Status}");
+        text.AppendLine(culture, $"Стан: {result.Status}");
         return text.ToString();
     }
 }

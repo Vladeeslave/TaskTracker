@@ -38,8 +38,16 @@ public sealed class Client
     public string Describe()
     {
         string s = Name.Trim().ToUpper();
-        if (Kind == ClientKind.Vip) s += " [VIP]";
-        if (IsLoyal) s += " [ЛОЯЛЬНИЙ]";
+        if (Kind == ClientKind.Vip)
+        {
+            s += " [VIP]";
+        }
+
+        if (IsLoyal)
+        {
+            s += " [ЛОЯЛЬНИЙ]";
+        }
+
         s += " <" + Email.ToLower() + ">";
         int years = DateTime.Now.Year - SinceUtc.Year;
         s += " стаж " + years;
