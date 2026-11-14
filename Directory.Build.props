@@ -11,5 +11,8 @@
     <VersionPrefix>0.8.0</VersionPrefix>
     <Authors>Тележинський Влад</Authors>
     <Product>TaskTracker</Product>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+
   </PropertyGroup>
 </Project>
