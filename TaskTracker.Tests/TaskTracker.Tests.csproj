@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaskTracker.Core\TaskTracker.Core.csproj" />
+    <ProjectReference Include="..\TaskTracker.App\TaskTracker.App.csproj" />
   </ItemGroup>
 
 </Project>
