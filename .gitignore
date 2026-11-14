@@ -499,3 +499,8 @@ bin/
 obj/
 TestResults/
 coverage/
+
+# ЛР 8: локальні налаштування та секрети
+appsettings.Local.json
+**/*.secrets.json
+.env
