@@ -1,18 +1,31 @@
 <Project>
+  <!-- Машинна частина стандарту кодування (docs/standard/standard.md, розділ 6.2). -->
   <PropertyGroup>
+    <!-- Єдина цільова платформа для всіх проєктів. -->
     <TargetFramework>net8.0</TargetFramework>
+    <!-- Компілятор стежить за null; попередження CS86xx зупиняють збірку (D-10). -->
     <Nullable>enable</Nullable>
+    <!-- Типові using додає SDK, файли коротші. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Версія мови зафіксована: нові можливості не з'являться після оновлення SDK. -->
     <LangVersion>12.0</LangVersion>
+    <!-- Вбудовані аналізатори .NET (правила CA). -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <!-- Рівень і режим аналізу: суфікс recommended задає режим (окремий AnalysisMode не потрібен);
+         8.0, а не latest, щоб локальний SDK 10 і CI з SDK 8 застосовували той самий набір правил. -->
     <AnalysisLevel>8.0-recommended</AnalysisLevel>
+    <!-- Правила стилю .editorconfig (IDE) перевіряються під час збірки, а не лише в редакторі. -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Кожне попередження зупиняє збірку (A-03). -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Версія збірки в одному місці. -->
     <VersionPrefix>0.8.0</VersionPrefix>
     <Authors>Тележинський Влад</Authors>
     <Product>TaskTracker</Product>
+    <!-- Перевірка відомих вразливостей пакетів, разом із транзитивними (A-07). -->
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
-
+    <!-- GenerateDocumentationFile вмикається в .csproj проєктів Core і App (C-08), а не тут:
+         Tests і Legacy документації не вимагають. -->
   </PropertyGroup>
 </Project>

@@ -1,79 +1,65 @@
-root = true 
-  
-[*] 
-charset = utf-8 
-insert_final_newline = true 
-trim_trailing_whitespace = true 
-indent_style = space 
-indent_size = 4 
-  
-[*.{csproj,props,targets,json,yml}] 
-indent_size = 2 
-  
-[*.cs] 
-max_line_length = 100 
-  
-# форматування у стилі Allman 
-csharp_new_line_before_open_brace = all 
-csharp_new_line_before_else = true 
-csharp_new_line_before_catch = true 
-csharp_prefer_braces = true:warning 
-csharp_indent_case_contents = true 
-dotnet_sort_system_directives_first = true 
-  
-# сучасний синтаксис C# 
-csharp_style_namespace_declarations = file_scoped:warning 
-csharp_style_var_for_built_in_types = false:suggestion 
-  
-# іменування: приватні поля з підкресленням 
-dotnet_naming_rule.priv_underscore.symbols = priv_field 
-dotnet_naming_rule.priv_underscore.style = underscore_camel 
-dotnet_naming_rule.priv_underscore.severity = warning 
-  
-dotnet_naming_symbols.priv_field.applicable_kinds = field 
-dotnet_naming_symbols.priv_field.applicable_accessibilities = private 
-  
-dotnet_naming_style.underscore_camel.capitalization = camel_case 
+# Машинна частина стандарту кодування TaskTracker (docs/standard/standard.md, розділ 6).
+# Рівні діагностики збігаються з рівнями обов'язковості в тексті стандарту:
+# ОБОВ'ЯЗКОВО та ЗАБОРОНЕНО - error, РЕКОМЕНДОВАНО - suggestion або warning, вимкнене правило - none.
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,json,yml}]
+indent_size = 2
+
+[*.cs]
+# F-02: довжина рядка 100 символів (РЕКОМЕНДОВАНО), ЖР-002
+max_line_length = 100
+
+# F-04, F-06: форматування у стилі Allman
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+# F-05: дужки навіть для одного оператора
+csharp_prefer_braces = true:error
+csharp_indent_case_contents = true
+# F-11: System першим серед using
+dotnet_sort_system_directives_first = true
+
+# F-10: простір імен без блока
+csharp_style_namespace_declarations = file_scoped:error
+
+# D-04: для вбудованих типів тип пишемо явно
+csharp_style_var_for_built_in_types = false:suggestion
+# D-28: ключові слова мови замість типів бібліотеки (int, а не Int32)
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+# N-19: без this.
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+# D-27: поле, що не змінюється, - readonly
+dotnet_style_readonly_field = true:suggestion
+# N-01: простір імен відповідає теці
+dotnet_style_namespace_match_folder = true:suggestion
+
+# N-08, N-09: приватні поля з підкресленням (ЖР-001)
+dotnet_naming_rule.priv_underscore.symbols = priv_field
+dotnet_naming_rule.priv_underscore.style = underscore_camel
+dotnet_naming_rule.priv_underscore.severity = error
+
+dotnet_naming_symbols.priv_field.applicable_kinds = field
+dotnet_naming_symbols.priv_field.applicable_accessibilities = private
+
+dotnet_naming_style.underscore_camel.capitalization = camel_case
 dotnet_naming_style.underscore_camel.required_prefix = _
 
-# StyleCop: свідомо вимкнені правила
-# заголовок з ліцензією в навчальному проєкті не потрібен
-dotnet_diagnostic.SA1633.severity = none
-# префікс this. суперечить конвенції .NET
-dotnet_diagnostic.SA1101.severity = none
-# using поза namespace — стандарт шаблонів .NET
-dotnet_diagnostic.SA1200.severity = none
-# приватні поля іменуємо з _, як прийнято в .NET
-dotnet_diagnostic.SA1309.severity = none
-# аналіз XML-коментарів контролює компілятор (CS1591), SA0001 не потрібне
-dotnet_diagnostic.SA0001.severity = none
-# partial-типи в проєкті не використовуються
-dotnet_diagnostic.SA1601.severity = none
-# кома в кінці багаторядкового ініціалізатора необов’язкова
-dotnet_diagnostic.SA1413.severity = none
-# «Gets» суперечить українській документації
-dotnet_diagnostic.SA1623.severity = none
-# те саме для конструктора («Initializes a new instance of»)
-dotnet_diagnostic.SA1642.severity = none
-# Parse/ToString без культури: борг закрито в ЛР № 8 (типізовані рядки з ЛР № 5)
-dotnet_diagnostic.CA1305.severity = warning
-
-
-# правила, які лишаємо суворими
-dotnet_diagnostic.SA1028.severity = warning
-dotnet_diagnostic.SA1201.severity = warning
-dotnet_diagnostic.SA1503.severity = warning
-dotnet_diagnostic.SA1516.severity = warning
-dotnet_diagnostic.SA1600.severity = warning
-dotnet_diagnostic.SA1602.severity = warning
-dotnet_diagnostic.SA1611.severity = warning
-dotnet_diagnostic.SA1615.severity = warning
-dotnet_diagnostic.IDE0055.severity = warning
-
-# константи (у тому числі приватні) іменуємо PascalCase, а не _camelCase
+# N-10: константи (у тому числі приватні) називаємо PascalCase, а не _camelCase
 dotnet_naming_rule.private_const_pascal.symbols = private_const
 dotnet_naming_rule.private_const_pascal.style = pascal_case_style
-dotnet_naming_rule.private_const_pascal.severity = warning
+dotnet_naming_rule.private_const_pascal.severity = error
 
 dotnet_naming_symbols.private_const.applicable_kinds = field
 dotnet_naming_symbols.private_const.applicable_accessibilities = private
@@ -81,5 +67,64 @@ dotnet_naming_symbols.private_const.required_modifiers = const
 
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
-# вимога LoggerMessage-генератора зайва: методичка вимагає LogInformation з іменованими заповнювачами
+# N-03: інтерфейси починаються з I
+dotnet_naming_rule.interfaces_start_with_i.symbols = interface_symbols
+dotnet_naming_rule.interfaces_start_with_i.style = begins_with_i
+dotnet_naming_rule.interfaces_start_with_i.severity = error
+
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_symbols.interface_symbols.applicable_accessibilities = *
+
+dotnet_naming_style.begins_with_i.required_prefix = I
+dotnet_naming_style.begins_with_i.capitalization = pascal_case
+
+# ОБОВ'ЯЗКОВО (error): правила, які перевіряє компілятор і аналізатори
+# C-08: XML-коментар для публічного члена (CS1591 діє там, де вмикається GenerateDocumentationFile)
+dotnet_diagnostic.CS1591.severity = error
+# D-26: культура завжди явна (закрито в ЛР 8)
+dotnet_diagnostic.CA1304.severity = error
+dotnet_diagnostic.CA1305.severity = error
+dotnet_diagnostic.CA1311.severity = error
+# S-12: метод без стану - static
+dotnet_diagnostic.CA1822.severity = error
+# S-04, X-05: switch-вираз охоплює всі значення
+dotnet_diagnostic.CS8509.severity = error
+# F-07, F-08, F-09, F-11: порожні рядки, порядок елементів, using
+dotnet_diagnostic.SA1028.severity = error
+dotnet_diagnostic.SA1122.severity = error
+dotnet_diagnostic.SA1201.severity = error
+dotnet_diagnostic.SA1208.severity = error
+dotnet_diagnostic.SA1210.severity = error
+dotnet_diagnostic.SA1503.severity = error
+dotnet_diagnostic.SA1507.severity = error
+dotnet_diagnostic.SA1508.severity = error
+dotnet_diagnostic.SA1513.severity = error
+dotnet_diagnostic.SA1516.severity = error
+# C-08, C-10: документація
+dotnet_diagnostic.SA1600.severity = error
+dotnet_diagnostic.SA1602.severity = error
+dotnet_diagnostic.SA1611.severity = error
+dotnet_diagnostic.SA1615.severity = error
+# F-01, F-04, F-06: загальне форматування
+dotnet_diagnostic.IDE0055.severity = error
+
+# Свідомо вимкнені правила (розділ 6.4 стандарту)
+# SA1101 вимагає this. - суперечить N-19 (ЖР-001)
+dotnet_diagnostic.SA1101.severity = none
+# SA1200 вимагає using усередині namespace - у file-scoped namespace блока немає (F-10)
+dotnet_diagnostic.SA1200.severity = none
+# SA1309 забороняє підкреслення в імені поля - суперечить N-08 (ЖР-001)
+dotnet_diagnostic.SA1309.severity = none
+# заголовок із ліцензією в навчальному проєкті не потрібен
+dotnet_diagnostic.SA1633.severity = none
+# аналіз XML-коментарів контролює компілятор (CS1591), SA0001 не потрібне
+dotnet_diagnostic.SA0001.severity = none
+# partial-типи в проєкті не використовуються
+dotnet_diagnostic.SA1601.severity = none
+# кома в кінці багаторядкового ініціалізатора необов'язкова
+dotnet_diagnostic.SA1413.severity = none
+# SA1623 і SA1642 вимагають англійські "Gets or sets" та "Initializes a new instance of": суперечить C-12
+dotnet_diagnostic.SA1623.severity = none
+dotnet_diagnostic.SA1642.severity = none
+# вимога LoggerMessage-генератора зайва для навчального проєкту
 dotnet_diagnostic.CA1848.severity = none
